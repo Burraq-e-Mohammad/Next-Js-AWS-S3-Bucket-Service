@@ -27,11 +27,18 @@ export async function GET(req: NextRequest) {
       ? decodeURIComponent(head.Metadata['original-name']) 
       : key.split('-').slice(1).join('-');
 
+    const previewUrl = s3.getSignedUrl('getObject', {
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Key: key,
+      Expires: 600, // 10 minutes validity for preview
+    });
+
     return NextResponse.json({
       name: originalName,
       size: head.ContentLength,
       type: head.ContentType,
-      lastModified: head.LastModified
+      lastModified: head.LastModified,
+      previewUrl
     });
   } catch (error) {
     console.error('S3 Fetch Error:', error);

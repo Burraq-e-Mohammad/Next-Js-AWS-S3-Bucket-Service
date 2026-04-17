@@ -10,7 +10,22 @@ interface FileInfo {
   size: number;
   type: string;
   lastModified: string;
+  previewUrl?: string;
 }
+
+const formatFileType = (mime: string) => {
+  if (!mime) return 'Unknown';
+  if (mime.includes('wordprocessing') || mime.includes('msword')) return 'Word Document';
+  if (mime.includes('spreadsheet') || mime.includes('excel')) return 'Excel Spreadsheet';
+  if (mime.includes('presentation') || mime.includes('powerpoint')) return 'PowerPoint';
+  if (mime.includes('pdf')) return 'PDF Document';
+  if (mime.includes('zip') || mime.includes('compressed')) return 'ZIP Archive';
+  if (mime.startsWith('image/')) return mime.replace('image/', '').toUpperCase() + ' Image';
+  if (mime.startsWith('video/')) return mime.replace('video/', '').toUpperCase() + ' Video';
+  if (mime.startsWith('audio/')) return mime.replace('audio/', '').toUpperCase() + ' Audio';
+  if (mime.startsWith('text/')) return mime.replace('text/', '').toUpperCase() + ' Text';
+  return 'Unknown Format';
+};
 
 export default function DownloadPage({ params }: { params: Promise<{ key: string[] }> }) {
   const resolvedParams = use(params);
@@ -129,55 +144,77 @@ export default function DownloadPage({ params }: { params: Promise<{ key: string
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 md:py-24">
+    <div className="max-w-2xl mx-auto px-4 py-4 md:py-8 lg:py-12">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="glass-morphism rounded-[2.5rem] p-8 md:p-16 border border-white/5 shadow-2xl relative overflow-hidden"
+        className="glass-morphism rounded-3xl p-6 lg:p-10 border border-white/5 shadow-2xl relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl -z-10" />
         
         <div className="flex flex-col items-center text-center">
-          <div className="p-5 bg-primary/10 rounded-3xl mb-8 relative">
-            <File className="w-12 h-12 text-primary" />
+          <div className="w-24 h-24 bg-primary/5 rounded-2xl mb-4 relative flex items-center justify-center p-1.5 border border-white/10 shadow-inner">
+            {fileInfo?.type?.startsWith('image/') ? (
+              <img 
+                src={fileInfo.previewUrl} 
+                alt={fileInfo.name} 
+                className="w-full h-full object-cover rounded-[14px]"
+              />
+            ) : fileInfo?.type?.startsWith('video/') ? (
+              <video 
+                src={fileInfo.previewUrl} 
+                className="w-full h-full object-cover rounded-[14px]"
+                muted
+                loop
+                autoPlay
+                playsInline
+              />
+            ) : (
+              <File className="w-10 h-10 text-primary/40" />
+            )}
+            
             <motion.div 
               animate={{ scale: [1, 1.2, 1] }} 
               transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute -top-1 -right-1"
+              className="absolute -top-2 -right-2 z-10 bg-background rounded-full p-1 border border-white/5"
             >
-              <CheckCircle2 className="w-6 h-6 text-accent fill-background" />
+              <CheckCircle2 className="w-6 h-6 text-accent fill-background relative -top-[1px] -left-[1px]" />
             </motion.div>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-extrabold mb-2 tracking-tight">
+          <h1 className="text-xl md:text-2xl font-extrabold mb-1 tracking-tight">
             File ready for pick-up
           </h1>
-          <p className="text-foreground/40 font-medium mb-12">
+          <p className="text-foreground/40 text-sm font-medium mb-5">
             Secured via S3Transmit Cloud
           </p>
 
-          <div className="w-full max-w-md space-y-4 mb-12">
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
-              <div className="text-left">
+          <div className="w-full max-w-md space-y-3 mb-6">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 grid grid-cols-2 gap-3 text-left">
+              <div className="col-span-2 border-b border-foreground/10 pb-3">
                 <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold mb-1">File Name</p>
-                <p className="font-bold truncate max-w-[200px]">{fileInfo?.name}</p>
+                <p className="font-bold truncate text-lg" title={fileInfo?.name}>{fileInfo?.name}</p>
               </div>
-              <div className="text-right">
+              <div className="border-r border-foreground/10 pr-4">
+                <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold mb-1">Type</p>
+                <p className="font-bold truncate text-sm" title={fileInfo?.type}>{fileInfo?.type ? formatFileType(fileInfo.type) : 'Unknown'}</p>
+              </div>
+              <div className="pl-2">
                 <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold mb-1">Size</p>
-                <p className="font-bold">{fileInfo ? (fileInfo.size / 1024 / 1024).toFixed(2) : '0'} MB</p>
+                <p className="font-bold text-sm text-foreground/90">{fileInfo ? (fileInfo.size / 1024 / 1024).toFixed(2) : '0'} MB</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1 p-4 rounded-xl bg-accent/5 border border-accent/10 flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 p-2.5 rounded-xl bg-accent/5 border border-accent/10 flex items-center gap-2 border-[0.5px]">
                 <Clock className="w-4 h-4 text-accent" />
-                <span className="text-sm font-bold text-accent/80">
+                <span className="text-xs font-bold text-accent/80">
                   Expires in {timeLeft !== null ? formatTime(timeLeft) : '...'}
                 </span>
               </div>
-              <div className="flex-1 p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-3">
+              <div className="flex-1 p-2.5 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-2 border-[0.5px]">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                <span className="text-sm font-bold text-primary/80 uppercase tracking-tighter">AES-256</span>
+                <span className="text-xs font-bold text-primary/80 uppercase tracking-tighter">AES-256</span>
               </div>
             </div>
           </div>
@@ -185,7 +222,7 @@ export default function DownloadPage({ params }: { params: Promise<{ key: string
           <button
             onClick={handleDownload}
             disabled={isDownloading}
-            className="w-full max-w-md py-5 rounded-2xl bg-primary hover:bg-primary-hover text-white font-extrabold text-lg transition-all shadow-xl shadow-primary/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+            className="w-full max-w-md py-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-extrabold text-base transition-all shadow-xl shadow-primary/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isDownloading ? (
               <>
@@ -202,9 +239,9 @@ export default function DownloadPage({ params }: { params: Promise<{ key: string
         </div>
       </motion.div>
 
-      <div className="mt-12 flex items-center justify-center gap-8 opacity-40">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-          <ShieldCheck className="w-4 h-4" /> End-to-End Encryption
+      <div className="mt-6 flex items-center justify-center gap-6 opacity-40">
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+          <ShieldCheck className="w-3 h-3" /> End-to-End Encryption
         </div>
         <div className="w-px h-4 bg-foreground/20" />
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
