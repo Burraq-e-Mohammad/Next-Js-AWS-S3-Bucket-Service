@@ -66,8 +66,8 @@ export default function UploadPage() {
           Reliable <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">S3 Storage</span>
         </h1>
         <p className="text-foreground/60 text-lg md:text-xl max-w-2xl mx-auto font-medium">
-          High-performance file transmission directly to your AWS S3 bucket. 
-          Secure, encrypted, and lightning fast.
+          High-performance file transmission directly to our secure AWS S3 bucket. 
+          Encrypted, private, and lightning fast.
         </p>
       </motion.div>
 
